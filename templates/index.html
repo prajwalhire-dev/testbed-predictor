@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Testbed Predictor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-diagram-3"></i> Testbed Predictor
+            </a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                {% if not model_loaded %}
+                <div class="alert alert-warning">
+                    <strong><i class="bi bi-exclamation-triangle"></i> Warning:</strong> Model not loaded. Please train a model first.
+                    <form action="/train" method="post" id="trainForm">
+                        <button type="submit" class="btn btn-warning mt-2">
+                            <i class="bi bi-cpu"></i> Train Model
+                        </button>
+                    </form>
+                </div>
+                {% else %}
+                <div class="alert alert-success">
+                    <strong><i class="bi bi-check-circle"></i> Success:</strong> Model loaded successfully.
+                </div>
+                {% endif %}
+                
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-sliders"></i> Prediction Parameters
+                    </div>
+                    <div class="card-body">
+                        <form id="predictionForm">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="pid" class="form-label">PID</label>
+                                    <select class="form-select" id="pid" name="pid" required>
+                                        <option value="" selected disabled>Select PID</option>
+                                        {% for pid in pids %}
+                                        <option value="{{ pid }}">{{ pid }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="family" class="form-label">Family</label>
+                                    <select class="form-select" id="family" name="family" required>
+                                        <option value="" selected disabled>Select Family</option>
+                                        {% for family in families %}
+                                        <option value="{{ family }}">{{ family }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="devices" class="form-label">Devices</label>
+                                    <input type="number" class="form-control" id="devices" name="devices" min="1" max="10" value="6" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="devices_required" class="form-label">Devices Required</label>
+                                    <input type="number" class="form-control" id="devices_required" name="devices_required" min="1" max="10" value="3" required>
+                                </div>
+                            </div>
+                            
+                            <h5 class="mb-3">Resource Requirements</h5>
+                            <div class="row mb-3">
+                                <div class="col-md-3">
+                                    <label for="tgn" class="form-label">TGN</label>
+                                    <select class="form-select" id="tgn" name="tgn" required>
+                                        <option value="yes">Yes</option>
+                                        <option value="no">No</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="tgn_required" class="form-label">TGN Required</label>
+                                    <select class="form-select" id="tgn_required" name="tgn_required" required>
+                                        <option value="yes">Yes</option>
+                                        <option value="no" selected>No</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="servers" class="form-label">Servers</label>
+                                    <select class="form-select" id="servers" name="servers" required>
+                                        <option value="yes">Yes</option>
+                                        <option value="no">No</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="servers_required" class="form-label">Servers Required</label>
+                                    <select class="form-select" id="servers_required" name="servers_required" required>
+                                        <option value="yes">Yes</option>
+                                        <option value="no">No</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="eor" class="form-label">EOR</label>
+                                    <select class="form-select" id="eor" name="eor" required>
+                                        <option value="yes">Yes</option>
+                                        <option value="no" selected>No</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="eor_required" class="form-label">EOR Required</label>
+                                    <select class="form-select" id="eor_required" name="eor_required" required>
+                                        <option value="yes">Yes</option>
+                                        <option value="no" selected>No</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="load" class="form-label">Load</label>
+                                    <select class="form-select" id="load" name="load" required>
+                                        {% for load in load_values %}
+                                        <option value="{{ load }}">{{ load|capitalize }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <h5 class="mb-3">Software Support</h5>
+                            <div class="card mb-4">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-2">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="i_support_check" onchange="updateSelect('i_support_check', 'i_support')">
+                                                <label class="form-check-label" for="i_support_check">I</label>
+                                                <select class="form-select d-none" id="i_support" name="i_support">
+                                                    <option value="no" selected>No</option>
+                                                    <option value="yes">Yes</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="k_support_check" onchange="updateSelect('k_support_check', 'k_support')">
+                                                <label class="form-check-label" for="k_support_check">K</label>
+                                                <select class="form-select d-none" id="k_support" name="k_support">
+                                                    <option value="no" selected>No</option>
+                                                    <option value="yes">Yes</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="m_support_check" onchange="updateSelect('m_support_check', 'm_support')">
+                                                <label class="form-check-label" for="m_support_check">M</label>
+                                                <select class="form-select d-none" id="m_support" name="m_support">
+                                                    <option value="no" selected>No</option>
+                                                    <option value="yes">Yes</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="n_support_check" onchange="updateSelect('n_support_check', 'n_support')">
+                                                <label class="form-check-label" for="n_support_check">N</label>
+                                                <select class="form-select d-none" id="n_support" name="n_support">
+                                                    <option value="no" selected>No</option>
+                                                    <option value="yes">Yes</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="o_support_check" checked onchange="updateSelect('o_support_check', 'o_support')">
+                                                <label class="form-check-label" for="o_support_check">O</label>
+                                                <select class="form-select d-none" id="o_support" name="o_support">
+                                                    <option value="no">No</option>
+                                                    <option value="yes" selected>Yes</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="p_support_check" checked onchange="updateSelect('p_support_check', 'p_support')">
+                                                <label class="form-check-label" for="p_support_check">P</label>
+                                                <select class="form-select d-none" id="p_support" name="p_support">
+                                                    <option value="no">No</option>
+                                                    <option value="yes" selected>Yes</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary" id="predictBtn">
+                                    <i class="bi bi-lightning"></i> Predict
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="loader" id="loader"></div>
+                        
+                        <div class="card mt-4 result-card" id="resultCard">
+                            <div class="card-header bg-success text-white">
+                                <i class="bi bi-check-circle"></i> Prediction Result
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <p><strong>Recommended Testbed:</strong></p>
+                                        <h3 id="predictionResult"></h3>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p><strong>Confidence:</strong></p>
+                                        <h4 id="confidenceResult"></h4>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p><strong>Model Used:</strong></p>
+                                        <h4 id="modelUsed"></h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Model Visualization Section -->
+                {% if plot_files %}
+                <div class="card plot-card">
+                    <div class="card-header">
+                        <i class="bi bi-graph-up"></i> Model Visualization
+                    </div>
+                    <div class="card-body">
+                        <div class="accordion" id="plotsAccordion">
+                            {% for plot_file in plot_files %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="heading{{ loop.index }}">
+                                    <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}" aria-expanded="{{ 'true' if loop.first else 'false' }}" aria-controls="collapse{{ loop.index }}">
+                                        {% if 'model_comparison' in plot_file %}
+                                        <i class="bi bi-bar-chart me-2"></i> Model Comparison
+                                        {% elif 'confusion_matrices' in plot_file %}
+                                        <i class="bi bi-grid-3x3 me-2"></i> Confusion Matrices
+                                        {% elif 'roc_curves' in plot_file %}
+                                        <i class="bi bi-graph-up-arrow me-2"></i> ROC Curves
+                                        {% else %}
+                                        <i class="bi bi-image me-2"></i> Plot
+                                        {% endif %}
+                                    </button>
+                                </h2>
+                                <div id="collapse{{ loop.index }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" aria-labelledby="heading{{ loop.index }}" data-bs-parent="#plotsAccordion">
+                                    <div class="accordion-body">
+                                        <img src="{{ plot_file }}" alt="Plot" class="plot-img">
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Function to update hidden select values based on checkbox
+        function updateSelect(checkboxId, selectId) {
+            const checkbox = document.getElementById(checkboxId);
+            const select = document.getElementById(selectId);
+            
+            if (checkbox.checked) {
+                select.value = 'yes';
+            } else {
+                select.value = 'no';
+            }
+        }
+        
+        document.getElementById('predictionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Show loader
+            document.getElementById('loader').style.display = 'block';
+            document.getElementById('resultCard').style.display = 'none';
+            
+            // Get form data
+            const formData = new FormData(this);
+            
+            // Send request
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loader
+                document.getElementById('loader').style.display = 'none';
+                
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+                
+                // Display results
+                document.getElementById('predictionResult').textContent = data.prediction;
+                document.getElementById('confidenceResult').textContent = data.confidence + '%';
+                document.getElementById('modelUsed').textContent = data.model_used;
+                document.getElementById('resultCard').style.display = 'block';
+            })
+            .catch(error => {
+                document.getElementById('loader').style.display = 'none';
+                alert('Error: ' + error);
+            });
+        });
+        
+        // Handle training
+        if (document.getElementById('trainForm')) {
+            document.getElementById('trainForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                if (!confirm('Training a new model may take some time. Are you sure you want to continue?')) {
+                    return;
+                }
+                
+                // Show loader
+                document.getElementById('loader').style.display = 'block';
+                
+                // Send request
+                fetch('/train', {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loader
+                    document.getElementById('loader').style.display = 'none';
+                    
+                    if (data.error) {
+                        alert('Error: ' + data.error);
+                        return;
+                    }
+                    
+                    alert('Model trained successfully!');
+                    window.location.reload();
+                })
+                .catch(error => {
+                    document.getElementById('loader').style.display = 'none';
+                    alert('Error: ' + error);
+                });
+            });
+        }
+    </script>
+</body>
+</html>

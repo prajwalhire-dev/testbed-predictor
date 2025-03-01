@@ -1,0 +1,52 @@
+body {
+    background-color: #f8f9fa;
+    padding-top: 20px;
+}
+.card {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+.card-header {
+    background-color: #0d6efd;
+    color: white;
+    font-weight: bold;
+}
+.btn-primary {
+    background-color: #0d6efd;
+}
+.result-card {
+    display: none;
+}
+.loader {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #0d6efd;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 2s linear infinite;
+    margin: 20px auto;
+    display: none;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+.form-label {
+    font-weight: 500;
+}
+.navbar {
+    background-color: #0d6efd;
+}
+.navbar-brand {
+    color: white;
+    font-weight: bold;
+}
+.plot-card {
+    margin-top: 20px;
+}
+.plot-img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
